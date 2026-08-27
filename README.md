@@ -2,7 +2,7 @@
 
 A Flask-based data application that retrieves historical weather observations from the OpenWeather API, analyzes environmental conditions across multiple Maryland cities, trains a machine learning model, and presents temperature trends and predictions through an interactive web dashboard.
 
-<img width="1366" height="648" alt="Screenshot of Dashboard" src="images/dashboard2-1.png" />
+![Screenshot of Dashboard](images/dashboard2-1.png)
 
 ## Project Overview
 
@@ -11,6 +11,12 @@ This project was developed to explore how real-world weather data can be collect
 The application retrieves historical weather observations for Bowie, Baltimore, and Annapolis, Maryland, including temperature, humidity, atmospheric pressure, wind speed, and cloud coverage.
 
 The collected data is processed with Pandas and used to train a Linear Regression model that estimates temperature from observed weather conditions. Model performance, weather trends, predictions, and recent observations are then displayed through a Flask dashboard.
+
+## System Architecture
+
+The application integrates external weather data, Python-based processing and machine learning, and a Flask web interface. The diagram below shows the end-to-end flow from API collection through model evaluation and dashboard visualization.
+
+![Weather Prediction Dashboard System Architecture](images/weather-dashboard-architecture.png)
 
 ## Skills Demonstrated
 
@@ -48,19 +54,6 @@ The collected data is processed with Pandas and used to train a Linear Regressio
 **Data Source**
 
 * OpenWeather API
-
-## Application Workflow
-
-The project follows an end-to-end data application workflow:
-
-1. Historical weather observations are requested from the OpenWeather API.
-2. Data from multiple cities is combined into a Pandas DataFrame.
-3. Weather variables are prepared as features for machine learning.
-4. A Linear Regression model is trained using humidity, pressure, wind speed, and cloud coverage.
-5. Model performance is evaluated using R² and Mean Squared Error.
-6. The trained model generates example temperature estimates.
-7. Flask passes the results to the web interface.
-8. Chart.js visualizes temperature trends by city while the dashboard displays model metrics and recent weather observations.
 
 ## Weather Features
 
