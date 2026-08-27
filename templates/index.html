@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style13.css') }}">
+</head>
+
+<body>
+
+    <div class="dashboard">
+
+        <!-- HEADER -->
+        <header class="dashboard-header">
+            <div>
+                <p class="eyebrow">Weather Analytics</p>
+
+                <h1>🌤️ Weather Forecast Dashboard</h1>
+
+                <p class="subtitle">
+                    Historical weather trends and temperature predictions
+                    for Bowie, Baltimore, and Annapolis.
+                </p>
+            </div>
+        </header>
+
+
+        {% if error %}
+
+            <div class="error-card">
+                <h2>Unable to Load Weather Data</h2>
+                <p>{{ error }}</p>
+            </div>
+
+        {% else %}
+
+
+        <!-- ========================= -->
+        <!-- CITY SUMMARY CARDS        -->
+        <!-- ========================= -->
+
+        <section class="section">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">Overview</p>
+                    <h2>Current Dataset Summary</h2>
+                </div>
+            </div>
+
+
+            <div class="city-grid">
+
+                {% for city in ['Bowie', 'Baltimore', 'Annapolis'] %}
+
+                    {% set city_rows = data
+                        | selectattr('city', 'equalto', city)
+                        | list %}
+
+                    {% if city_rows %}
+
+                        {% set latest = city_rows[-1] %}
+
+                        <div class="city-card">
+
+                            <div class="city-card-header">
+
+                                <div>
+                                    <span class="status-dot"></span>
+                                    <span class="city-name">
+                                        {{ city }}
+                                    </span>
+                                </div>
+
+                                <span class="city-icon">🌤️</span>
+
+                            </div>
+
+
+                            <div class="city-temperature">
+                                {{ latest.temp | round(1) }}°F
+                            </div>
+
+
+                            <div class="city-details">
+
+                                <div>
+                                    <span class="detail-label">
+                                        Humidity
+                                    </span>
+
+                                    <span class="detail-value">
+                                        {{ latest.humidity }}%
+                                    </span>
+                                </div>
+
+
+                                <div>
+                                    <span class="detail-label">
+                                        Wind
+                                    </span>
+
+                                    <span class="detail-value">
+                                        {{ latest.wind | round(1) }} mph
+                                    </span>
+                                </div>
+
+
+                                <div>
+                                    <span class="detail-label">
+                                        Pressure
+                                    </span>
+
+                                    <span class="detail-value">
+                                        {{ latest.pressure }} hPa
+                                    </span>
+                                </div>
+
+
+                                <div>
+                                    <span class="detail-label">
+                                        Clouds
+                                    </span>
+
+                                    <span class="detail-value">
+                                        {{ latest.clouds }}%
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ========================= -->
+        <!-- MODEL METRICS             -->
+        <!-- ========================= -->
+
+        <section class="section">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">
+                        Machine Learning
+                    </p>
+
+                    <h2>Model Performance</h2>
+                </div>
+            </div>
+
+
+            <div class="metric-grid">
+
+                <div class="metric-card">
+
+                    <div class="metric-icon">
+                        📈
+                    </div>
+
+                    <div>
+                        <p class="metric-label">
+                            R² Score
+                        </p>
+
+                        <p class="metric-value">
+                            {{ r2 | round(2) }}
+                        </p>
+
+                        <p class="metric-description">
+                            Measures how well the model explains
+                            temperature variation.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="metric-card">
+
+                    <div class="metric-icon">
+                        🎯
+                    </div>
+
+                    <div>
+                        <p class="metric-label">
+                            Mean Squared Error
+                        </p>
+
+                        <p class="metric-value">
+                            {{ mse | round(2) }}
+                        </p>
+
+                        <p class="metric-description">
+                            Measures the average size of the
+                            model's prediction errors.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ========================= -->
+        <!-- TEMPERATURE GRAPH         -->
+        <!-- ========================= -->
+
+        <section class="section">
+
+            <div class="chart-card">
+
+                <div class="section-heading chart-heading">
+
+                    <div>
+                        <p class="section-label">
+                            Historical Trends
+                        </p>
+
+                        <h2>
+                            Temperature Trends
+                        </h2>
+
+                        <p class="section-description">
+                            Temperature changes during the last
+                            5 days across all three cities.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="chart-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <!-- Luxon -->
+        <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+
+        <!-- Chart.js Date Adapter -->
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
+
+
+        <script>
+
+            const ctx =
+                document
+                .getElementById('tempChart')
+                .getContext('2d');
+
+
+            const chartData =
+                {{ chart_data | tojson }};
+
+
+            const colors = [
+                '#2563eb',
+                '#16a34a',
+                '#f97316',
+                '#8b5cf6',
+                '#e11d48'
+            ];
+
+
+            const datasets =
+                Object.keys(chartData)
+                .map((city, i) => {
+
+                    return {
+
+                        label: city,
+
+                        data: chartData[city],
+
+                        borderColor:
+                            colors[i % colors.length],
+
+                        backgroundColor:
+                            colors[i % colors.length],
+
+                        borderWidth: 3,
+
+                        pointRadius: 3,
+
+                        pointHoverRadius: 6,
+
+                        pointBorderWidth: 2,
+
+                        fill: false,
+
+                        tension: 0.35
+
+                    };
+
+                });
+
+
+            new Chart(ctx, {
+
+                type: 'line',
+
+                data: {
+                    datasets: datasets
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+
+
+                    plugins: {
+
+                        legend: {
+
+                            position: 'top',
+
+                            align: 'end',
+
+                            labels: {
+
+                                usePointStyle: true,
+
+                                pointStyle: 'circle',
+
+                                padding: 20,
+
+                                font: {
+                                    size: 13,
+                                    weight: '500'
+                                }
+
+                            }
+
+                        },
+
+
+                        tooltip: {
+
+                            backgroundColor:
+                                'rgba(15, 23, 42, 0.95)',
+
+                            padding: 12,
+
+                            titleFont: {
+                                size: 13
+                            },
+
+                            bodyFont: {
+                                size: 13
+                            }
+
+                        }
+
+                    },
+
+
+                    scales: {
+
+                        x: {
+
+                            type: 'time',
+
+                            time: {
+
+                                unit: 'day',
+
+                                tooltipFormat:
+                                    'MMM d, yyyy h:mm a',
+
+                                displayFormats: {
+                                    day: 'MMM d'
+                                }
+
+                            },
+
+
+                            grid: {
+                                display: false
+                            },
+
+
+                            border: {
+                                display: false
+                            },
+
+
+                            ticks: {
+                                color: '#64748b'
+                            },
+
+
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: '#475569'
+                            }
+
+                        },
+
+
+                        y: {
+
+                            grid: {
+                                color:
+                                    'rgba(148, 163, 184, 0.15)'
+                            },
+
+
+                            border: {
+                                display: false
+                            },
+
+
+                            ticks: {
+
+                                color: '#64748b',
+
+                                callback:
+                                    function(value) {
+                                        return value + '°F';
+                                    }
+
+                            },
+
+
+                            title: {
+                                display: true,
+                                text: 'Temperature (°F)',
+                                color: '#475569'
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            });
+
+        </script>
+
+
+
+        <!-- ========================= -->
+        <!-- PREDICTIONS               -->
+        <!-- ========================= -->
+
+        <section class="section">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="section-label">
+                        Forecasting
+                    </p>
+
+                    <h2>
+                        Temperature Predictions
+                    </h2>
+
+                    <p class="section-description">
+                        Predictions generated by the trained
+                        linear regression model.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="prediction-grid">
+
+                {% for p in predictions %}
+
+                    <div class="prediction-card">
+
+                        <div class="prediction-icon">
+                            🔮
+                        </div>
+
+                        <div>
+                            <p class="prediction-number">
+                                Scenario {{ loop.index }}
+                            </p>
+
+                            <p class="prediction-text">
+                                {{ p }}
+                            </p>
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ========================= -->
+        <!-- WEATHER TABLE             -->
+        <!-- ========================= -->
+
+        <section class="section">
+
+            <div class="table-card">
+
+                <div class="section-heading">
+
+                    <div>
+                        <p class="section-label">
+                            Weather Records
+                        </p>
+
+                        <h2>
+                            Recent Weather Data
+                        </h2>
+
+                        <p class="section-description">
+                            The latest 100 observations
+                            collected from the weather API.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>City</th>
+                                <th>Date / Time</th>
+                                <th>Temp</th>
+                                <th>Humidity</th>
+                                <th>Pressure</th>
+                                <th>Wind</th>
+                                <th>Clouds</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for row in data %}
+
+                                <tr>
+
+                                    <td>
+                                        <span class="city-badge">
+                                            {{ row.city }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        {{ row.datetime }}
+                                    </td>
+
+                                    <td class="temperature-cell">
+                                        {{ row.temp | round(1) }}°F
+                                    </td>
+
+                                    <td>
+                                        {{ row.humidity }}%
+                                    </td>
+
+                                    <td>
+                                        {{ row.pressure }} hPa
+                                    </td>
+
+                                    <td>
+                                        {{ row.wind | round(1) }} mph
+                                    </td>
+
+                                    <td>
+                                        {{ row.clouds }}%
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        {% endif %}
+
+
+        <!-- FOOTER -->
+
+        <footer class="footer">
+            <p>
+                Weather Analytics Dashboard
+                • OpenWeather Data
+                • Machine Learning Temperature Prediction
+            </p>
+        </footer>
+
+
+    </div>
+
+</body>
+</html>
