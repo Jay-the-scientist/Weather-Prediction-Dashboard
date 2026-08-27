@@ -2,6 +2,8 @@
 
 A Flask-based data application that retrieves historical weather observations from the OpenWeather API, analyzes environmental conditions across multiple Maryland cities, trains a machine learning model, and presents temperature trends and predictions through an interactive web dashboard.
 
+<img width="1366" height="648" alt="Screenshot of Dashboard" src="images/dashboard2-1.png" />
+
 ## Project Overview
 
 This project was developed to explore how real-world weather data can be collected, analyzed, modeled, and presented through a web application.
